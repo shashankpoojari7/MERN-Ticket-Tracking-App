@@ -95,7 +95,7 @@ function ViewTicket() {
                                 <div className="space-y-6">
                                     {tickets.map(ticket => (
                                         ticket.status && (
-                                            <div key={ticket._id} className="bg-white border-l-4 border-indigo-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm border border-gray-100">
+                                            <div key={ticket._id} className="bg-white border-l-5 border-l-indigo-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm border border-gray-100 ">
                                                 <div className="flex flex-col space-y-4">
                                                     <div className="flex items-start justify-between">
                                                         <div className="font-semibold text-xl text-gray-800 flex items-center gap-3">
