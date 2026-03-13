@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { showNotification } from '../store/notificationSlice.js'
 
 const AuthLayout = ({children}) => {
     const navigate = useNavigate()
@@ -10,10 +9,6 @@ const AuthLayout = ({children}) => {
 
     useEffect(() => {
         if (!authStatus) {
-            dispatch(showNotification({
-                message: "You're logged out. Log in again to access!",
-                type: 'info'   
-            }))
             navigate('/login');
         }
     }, [authStatus]);

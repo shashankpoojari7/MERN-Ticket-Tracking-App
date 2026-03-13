@@ -1,24 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { userLogin } from "../api/userApi";
-import { userRegister } from "../api/userApi";
+import { userLogin, userRegister, userLogout } from "../api/userApi"; 
 
 
 const initialState = {
-    user: {} ,
+    user: null, 
     isAuthenticated: false,
     error: null,
     isLoading: false,
+    registerSuccess: false,
 }
 
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        logout: (state) => {
-            state.isAuthenticated = false,
-            state.user = []
-            localStorage.removeItem("user")
-        },
         setCurrentUserData: (state, action) => {
             state.user = action.payload
             state.isAuthenticated = true
@@ -31,11 +26,10 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(userLogin.fulfilled, (state, action) => {
-                state.user = action.payload?.userData
+                state.user = action.payload;
                 state.isAuthenticated =true
                 state.isLoading = false
                 state.error = null 
-                localStorage.setItem('user',JSON.stringify(action.payload?.userData))
             })
             .addCase(userLogin.rejected, (state, action) => {
                 state.isLoading = false
@@ -46,18 +40,22 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(userRegister.fulfilled, (state, action) => {
-                state.user = action.payload?.userData
-                state.isAuthenticated =true
                 state.isLoading = false
+                state.registerSuccess = true;
                 state.error = null 
-                localStorage.setItem('user',JSON.stringify(action.payload?.userData))
             })
             .addCase(userRegister.rejected, (state, action) => {
                 state.isLoading = false
                 state.error = action.payload
             })
+            .addCase(userLogout.fulfilled, (state) => {
+                state.user = null;
+                state.isAuthenticated = false;
+                state.isLoading = false;
+                state.error = null;
+            });
     }
 })
 
-export const { logout, setCurrentUserData } = authSlice.actions;
+export const { setCurrentUserData } = authSlice.actions;
 export default authSlice.reducer

@@ -2,21 +2,24 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js"
 import jwt from 'jsonwebtoken'
 
-
 const generateRefreshAndAccessToken = async(userid) => {
-    try {
-        const user = await User.findOne( { _id: userid })
-    
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
-    
-        user.refreshToken = refreshToken
-        await user.save({validateBeforeSave : false})
-    
-        return {accessToken, refreshToken}
-    } catch (error) {
-        throw new ApiError(500, "Something went wrong while generating Access and refresh Token")
+  try {
+    const user = await User.findById(userid);
+
+    if (!user) {
+      throw new ApiError(404, "User not found");
     }
+
+    const accessToken = user.generateAccessToken()
+    const refreshToken = user.generateRefreshToken()
+
+    user.refreshToken = refreshToken
+    await user.save({validateBeforeSave : false})
+
+    return {accessToken, refreshToken}
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong while generating Access and refresh Token")
+  }
 }
 
 const registerUser = async(req,res) =>{
@@ -93,9 +96,11 @@ const loginUser =  async(req,res) => {
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     const options = {
-        httpOnly: true,
-        secure: true
-    }
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    };
 
     return res
     .status(200)
@@ -103,12 +108,9 @@ const loginUser =  async(req,res) => {
     .cookie("refreshToken", refreshToken, options)
     .json({
         userData:loggedInUser,
-        accessToken,
-        refreshToken,
         success: true,
         message: "Logged in successfully"
     })
-
 }
 
 const changeCurrentPassword = async(req,res)=>{
@@ -132,52 +134,112 @@ const changeCurrentPassword = async(req,res)=>{
     })
 }
 
-const refreshAccessToken = async (req,res)=>{
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+const refreshAccessToken = async (req, res) => {
+  const incomingRefreshToken = req.cookies.refreshToken
 
-    if(!incomingRefreshToken){
-        throw new ApiError(401, "Unauthorized request")
+  if (!incomingRefreshToken) {
+    return res.status(401).json({
+      success: false,
+      message: "No refresh token found",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decoded._id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    try {
-        const decodedToken = jwt.verify(
-            incomingRefreshToken,
-            process.env.REFRESH_TOKEN_SECRET
-        )
-    
-        const user = await User.findById(decodedToken?._id)
-    
-        if(!user){
-            throw new ApiError(401, "Invalid Refresh token")
-        }
-    
-        if(incomingRefreshToken !== user?.refreshToken){
-            throw new ApiError(401, "Refresh token is Expired")
-        }
-    
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
-    
-        const {accessToken,refreshToken} = await generateRefreshAndAccessToken(user._id)
-    
-        return res.status(200)
-        .cookie("accessToken",accessToken, options)
-        .cookie("refreshToken",refreshToken, options)
-        .json({
-                data: {accessToken, refreshToken: refreshToken},
-                message: "Access token refreshed"
-        })
-    } catch (error) {
-        throw new ApiError(401, error?.message || "Invalid refresh token")
+    // Safety fix
+    if (!user.refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "User has no stored refresh token",
+      });
     }
 
-}
+    if (incomingRefreshToken !== user.refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is invalid or expired",
+      });
+    }
+
+    const { accessToken, refreshToken } =
+      await generateRefreshAndAccessToken(user._id);
+
+    const options = {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", 
+      path: "/",
+    };
+
+    return res
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .status(200)
+      .json({
+        success: true,
+        data: { accessToken, refreshToken },
+        message: "Token refreshed",
+      });
+
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: error.message || "Invalid refresh token",
+    });
+  }
+};
+
+const logoutUser = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+
+    if (userId) {
+      await User.findByIdAndUpdate(userId, {
+        $unset: { refreshToken: 1 },
+      });
+    }
+
+    const options = {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    };
+
+    return res
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .status(200)
+      .json({
+        success: true,
+        message: "Logged out successfully",
+      });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
+    });
+  }
+};
+
 
 export {
     registerUser,
     loginUser,
     changeCurrentPassword,
-    refreshAccessToken
+    refreshAccessToken,
+    logoutUser
 }

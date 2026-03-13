@@ -10,7 +10,7 @@ const RegisterForm = () => {
 
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const { isAuthenticated, error, isLoading } = useSelector(state => state.auth)
+    const { registerSuccess, error, isLoading } = useSelector(state => state.auth)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -18,13 +18,13 @@ const RegisterForm = () => {
     }
 
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/');
+        if (registerSuccess) {
+            navigate("/login");
         }
-    }, [isAuthenticated, navigate]);
+    }, [registerSuccess, navigate]);
 
     return (
-        <div className="min-h-[calc(100vh-70px)] flex items-center justify-center bg-gradient-to-br from-purple-100 via-indigo-50 to-purple-100 px-4">
+        <div className="min-h-[calc(100vh-70px)] flex items-center justify-center bg-linear-to-br from-purple-100 via-indigo-50 to-purple-100 px-4">
             <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 backdrop-blur-sm">
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-gray-800 mb-2">Get Started</h2>

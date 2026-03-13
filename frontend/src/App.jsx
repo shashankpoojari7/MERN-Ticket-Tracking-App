@@ -5,17 +5,21 @@ import Header from './components/Header/Header'
 import { setCurrentUserData } from './store/authSlice'
 import { useDispatch } from 'react-redux'
 import Notification from './components/Notification'
+import api from './api/axios'
+import { userLogout } from './api/userApi'
 
 
 function App() {
     const dispatch = useDispatch()
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("user"))
-        
-        if(userData) {
-            dispatch(setCurrentUserData(userData))
-        }
-    },[])
+        api.get("/users/me")
+            .then((res) => {
+                dispatch(setCurrentUserData(res.data.user));
+            })
+            .catch(() => {
+                dispatch(userLogout());
+            });
+    }, []);
 
 return (
     <div className="min-h-screen bg-gray-50">

@@ -1,22 +1,22 @@
-import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import logo from "../../assets/dark-logo.png"
 import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../../store/authSlice'
+import { userLogout } from "../../api/userApi";
 
 function Header() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const isAuthenticated = useSelector(state => state.auth.isAuthenticated)
 
-    const handlelogout = () => {
-        dispatch(logout());
-        navigate('/login', { state: { fromLogout: true } });
-        dispatch(showNotification({
-            message: "Logged out successfully.",
-            type: 'info'
-        }));
+    const handleLogout = async () => {
+        try {
+            dispatch(userLogout());
+            navigate("/login");
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
     };
+
 
     return (
         <header className='w-full h-[70px] bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 shadow-lg sticky top-0 z-50'>
@@ -70,15 +70,15 @@ function Header() {
                 <div className='flex items-center space-x-3'>
                     {isAuthenticated ? (
                         <button
-                            onClick={handlelogout}
-                            className='bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95'
+                            onClick={handleLogout}
+                            className='bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95'
                         >
                             Logout
                         </button>
                     ) : (
                         <>
                             <Link to="/login">
-                                <button className='bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95'>
+                                <button className='bg-linear-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95'>
                                     Login
                                 </button>
                             </Link>

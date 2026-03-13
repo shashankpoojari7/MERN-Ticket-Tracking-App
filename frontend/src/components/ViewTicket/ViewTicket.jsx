@@ -11,9 +11,9 @@ function ViewTicket() {
     const [toggle, setToggle] = useState(null)
     const [statusMap, setStatusMap] = useState({});
     const dispatch = useDispatch();
-    const tickets = useSelector(state => state.ticket.tickets) || 0;
+    const tickets = useSelector(state => state.ticket.tickets) || [];
     const { isLoading, error } = useSelector(state => state.ticket);
-    const userid = useSelector(state => state.auth.user._id)
+    const userid = useSelector(state => state.auth.user?._id)
 
     useEffect(() => {
         const newStatusMap = {};
