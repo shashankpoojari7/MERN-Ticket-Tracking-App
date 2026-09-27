@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ticket-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:8
+    container_name: ticket-mongodb
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
