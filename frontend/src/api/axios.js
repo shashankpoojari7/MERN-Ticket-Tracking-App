@@ -1,8 +1,10 @@
 import axios from "axios";
 import { userLogout } from "../api/userApi";
 
+const url = import.meta.env.VITE_BACKEND_URL;
+
 const api = axios.create({
-    baseURL: "http://localhost:3000/api",
+    baseURL: url,
     withCredentials: true,
 });
 
