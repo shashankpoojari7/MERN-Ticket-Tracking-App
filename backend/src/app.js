@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
-    pod: process.env.HOSTNAME,
+    pod: process.env.HOSTNAME || os.hostname(),
     hostname: os.hostname()
   });
 });
