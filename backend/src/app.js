@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors';
 import cookieParser from 'cookie-parser'
+import os from "os";
 
 const app = express()
 
@@ -18,8 +19,10 @@ app.use((req, res, next) => {
 });
 
 app.get("/health", (req, res) => {
-  res.status(200).json({
+  res.json({
     status: "OK",
+    pod: process.env.HOSTNAME,
+    hostname: os.hostname()
   });
 });
 

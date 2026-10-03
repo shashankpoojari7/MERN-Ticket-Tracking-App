@@ -64,3 +64,35 @@ jobs:
           tags: |
             ${{ env.DOCKERHUB_IMAGE }}:${{ github.sha }}
             ${{ env.DOCKERHUB_IMAGE }}:latest
+  
+  deploy:
+    name: Deploy to EKS
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig \
+            --region ap-south-1 \
+            --name ticket-management-cluster
+
+      - name: Update deployment
+        run: |
+          kubectl set image deployment/ticket-backend \
+            backend=shashankpoojari/mern-ticket-tracking-app:${GITHUB_SHA}
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/ticket-backend
